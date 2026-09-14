@@ -14,4 +14,3 @@ chatRouter.delete("/delete/:chatId",authUser,deleteChat)
 
 
 export default chatRouter
-

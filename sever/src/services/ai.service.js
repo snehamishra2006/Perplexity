@@ -49,26 +49,41 @@ export async function generateChatTitle(message) {
 
 
 // Gemini model for response 
+// export async function generateResponse(messages) {
+//     // console.log(messages)
+
+//     const response = await geminiModel.invoke({
+//         messages: [
+//             new SystemMessage(`
+//                 You are a helpful and precise assistant for answering questions.
+//                 If you don't know the answer, say you don't know. 
+//                 If the question requires up-to-date information, use the "searchInternet" tool to get the latest information from the internet and then answer based on the search results.
+//             `),
+//             ...(messages.map(msg => {
+//                 if (msg.role == "user") {
+//                     return new HumanMessage(msg.content)
+//                 } else if (msg.role == "ai") {
+//                     return new AIMessage(msg.content)
+//                 }
+//             })) ]
+//     });
+
+//     return response.messages[ response.messages.length - 1 ].text;
+
+// }
+
 export async function generateResponse(messages) {
-    console.log(messages)
+    console.log("Calling Gemini with", messages.length, "messages")
 
-    const response = await agent.invoke({
-        messages: [
-            new SystemMessage(`
-                You are a helpful and precise assistant for answering questions.
-                If you don't know the answer, say you don't know. 
-                If the question requires up-to-date information, use the "searchInternet" tool to get the latest information from the internet and then answer based on the search results.
-            `),
-            ...(messages.map(msg => {
-                if (msg.role == "user") {
-                    return new HumanMessage(msg.content)
-                } else if (msg.role == "ai") {
-                    return new AIMessage(msg.content)
-                }
-            })) ]
-    });
+    const response = await geminiModel.invoke([
+        new SystemMessage(`You are a helpful and precise assistant for answering questions. If you don't know the answer, say you don't know.`),
+        ...messages.map(msg => {
+            if (msg.role === "user") return new HumanMessage(msg.content)
+            if (msg.role === "ai") return new AIMessage(msg.content)
+        })
+    ]);
 
-    return response.messages[ response.messages.length - 1 ].text;
+    console.log("Gemini responded:", response.content)
 
+    return response.content;
 }
-
