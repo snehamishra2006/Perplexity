@@ -1,7 +1,7 @@
 import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../services/mail.service.js";
-
+import redis from "../config/cache.js";
 
 /**
  * @desc Register a new user
@@ -185,4 +185,28 @@ export async function verifyEmail(req, res) {
             err: err.message
         })
     }
+}
+
+
+export async function logout(req, res) {
+    const token = req.cookies.token;
+
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+            if (ttl > 0) {
+                await redis.set(`bl:${token}`, "blacklisted", { EX: ttl });
+            }
+        } catch (err) {
+            // expired/invalid token पहले से बेकार है, कुछ करने की ज़रूरत नहीं
+        }
+    }
+
+    res.clearCookie("token");
+
+    res.status(200).json({
+        message: "Logged out successfully",
+        success: true
+    })
 }
