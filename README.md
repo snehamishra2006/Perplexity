@@ -1,27 +1,41 @@
 # Perplexity
 
-A full-stack AI-powered chat application inspired by Perplexity, built with a React frontend and an Express + MongoDB backend. The app includes user authentication, email verification, AI chat responses, internet search support, and persistent chat history.
+A full-stack AI research and chat application inspired by Perplexity, built with a React frontend and an Express + MongoDB backend. Users can sign up, verify their email, chat with an AI assistant, and ask questions that can use live web search and email-sending capabilities.
+
+## Overview
+
+This project combines:
+
+- A React + Vite frontend for the user interface
+- An Express backend for API routes, auth, and AI orchestration
+- MongoDB for persistent user and chat data
+- Redis for token blacklisting
+- Socket.IO for real-time server communication
+- LangChain with Google Gemini and Mistral models for AI responses and chat titles
+- Tavily search integration for live information retrieval
+- Gmail-based email sending for account verification and notifications
 
 ## Features
 
 - User registration and login
 - JWT-based authentication
 - Email verification during signup
-- Email sending using Gmail OAuth + Nodemailer
-- AI chat conversations with Gemini + LangChain
-- Internet search capability via Tavily
+- Secure password hashing with bcrypt
+- AI chat generation using Gemini
 - Chat title generation using Mistral
+- Web search integration via Tavily
+- Email sending through Gmail/Nodemailer when explicitly requested by the user
+- Persistent chat and message history in MongoDB
 - Real-time socket server setup
-- Persistent chat history in MongoDB
-- React + Vite frontend with Redux state management
+- Responsive frontend with Redux and Tailwind CSS
 
 ## Tech Stack
 
 ### Frontend
 - React 19
 - Vite
-- Redux Toolkit
 - React Router
+- Redux Toolkit
 - Axios
 - Socket.IO Client
 - Tailwind CSS
@@ -31,8 +45,10 @@ A full-stack AI-powered chat application inspired by Perplexity, built with a Re
 - Node.js
 - Express 5
 - MongoDB + Mongoose
+- Redis
 - Socket.IO
-- JWT + bcryptjs
+- JWT
+- bcryptjs
 - LangChain
 - Google Generative AI
 - Mistral AI
@@ -44,71 +60,87 @@ A full-stack AI-powered chat application inspired by Perplexity, built with a Re
 ```text
 Perplexity/
 ├── client/
+│   ├── public/
 │   ├── src/
+│   ├── eslint.config.js
+│   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js
-│   └── index.html
-├── sever/
+│   ├── README.md
+│   └── vite.config.js
+├── server/
 │   ├── src/
-│   ├── .env
 │   ├── package.json
 │   ├── server.js
-│   └── ...
+│   └── .env
 ├── .gitignore
-└── README.md
+├── README.md
+└── .git/
 ```
 
-## Getting Started
+## Prerequisites
 
-### 1. Install dependencies
+Before you begin, make sure you have:
 
-Backend:
+- Node.js 18+ installed
+- MongoDB running locally or a MongoDB Atlas connection string
+- Redis running locally (for token blacklist support)
+- API keys for:
+  - Gemini
+  - Mistral
+  - Tavily
+- Gmail OAuth credentials for email sending
 
-```bash
-cd Perplexity/sever
-npm install
-```
+## Environment Variables
 
-Frontend:
-
-```bash
-cd Perplexity/client
-npm install
-```
-
-### 2. Configure environment variables
-
-Create or update the backend `.env` file in `Perplexity/sever/.env` with the required values:
+Create a `.env` file inside the `server` folder with values like:
 
 ```env
-MONGO_URI=your_mongodb_connection_string
-PORT=3000
-JWT_SECRET=your_jwt_secret
+PORT=8000
+MONGO_URI=mongodb://127.0.0.1:27017/perplexity
+JWT_SECRET=your_super_secret_key
 GEMINI_API_KEY=your_gemini_api_key
 MISTRAL_API_KEY=your_mistral_api_key
 TAVILY_API_KEY=your_tavily_api_key
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_REFRESH_TOKEN=your_google_refresh_token
-GOOGLE_USER=your_email@example.com
+GOOGLE_USER=your_email@gmail.com
 ```
 
-> The email feature uses Gmail OAuth2 credentials, so the app can send verification and welcome emails automatically when a user registers.
+> The email verification flow relies on Gmail OAuth credentials, so it can send account verification messages successfully.
 
-### 3. Run the backend
+## Installation
+
+### 1. Install backend dependencies
 
 ```bash
-cd Perplexity/sever
+cd Perplexity/server
+npm install
+```
+
+### 2. Install frontend dependencies
+
+```bash
+cd ../client
+npm install
+```
+
+## Running the App
+
+### Start the backend
+
+```bash
+cd Perplexity/server
 npm run dev
 ```
 
-The backend runs on:
+The backend starts on:
 
 ```text
-http://localhost:3000
+http://localhost:8000
 ```
 
-### 4. Run the frontend
+### Start the frontend
 
 ```bash
 cd Perplexity/client
@@ -121,60 +153,55 @@ The frontend runs on:
 http://localhost:5173
 ```
 
-## Email Verification Flow
-
-When a user registers:
-
-1. The backend creates a JWT token using the user email.
-2. It sends a verification email through Gmail SMTP/OAuth.
-3. The user clicks the verification link.
-4. The backend verifies the token and marks the user as verified.
-5. Only verified users can log in successfully.
-
-This is handled by the auth controller and the email service in the backend.
-
-## API Endpoints
+## API Overview
 
 ### Authentication
 
 - `POST /api/auth/register` — Register a new user and send a verification email
-- `POST /api/auth/login` — Log in a user after email verification
-- `GET /api/auth/get-me` — Get the authenticated user
-- `GET /api/auth/verify-email` — Verify the email token and activate the account
+- `POST /api/auth/login` — Log in an authenticated user
+- `POST /api/auth/logout` — Log the user out and blacklist the current token
+- `GET /api/auth/get-me` — Get the current logged-in user
+- `GET /api/auth/verify-email` — Verify a user email using the token in the query string
 
 ### Chats
 
-- `POST /api/chats/message` — Send a message and get an AI response
+- `POST /api/chats/message` — Send a message and receive an AI response
 - `GET /api/chats` — Fetch all chats for the logged-in user
-- `GET /api/chats/:chatId/messages` — Fetch messages from a chat
-- `DELETE /api/chats/delete/:chatId` — Delete a chat
+- `GET /api/chats/:chatId/messages` — Fetch all messages in a specific chat
+- `DELETE /api/chats/delete/:chatId` — Delete a chat and its messages
 
-## App Flow
+## Authentication Flow
 
-1. User registers with a username, email, and password.
-2. The backend sends a verification email through Gmail OAuth.
-3. User confirms the email via the verification link.
-4. JWT token is generated for authenticated requests.
-5. User sends a prompt through the chat UI.
-6. Backend creates or fetches a conversation.
-7. AI service generates a response, optionally using Tavily search.
-8. Messages are stored in MongoDB and the chat history is returned to the client.
+1. A user signs up with a username, email, and password.
+2. The backend creates the user and sends a verification email.
+3. The user opens the verification link and activates the account.
+4. The user logs in with verified credentials.
+5. A JWT is generated and stored in a cookie for protected routes.
+
+## AI Workflow
+
+1. User sends a prompt from the frontend.
+2. The backend checks whether a chat already exists.
+3. The conversation history is sent to the AI service.
+4. Gemini answers the prompt, optionally using Tavily search when required.
+5. The AI response is saved as a message and returned to the client.
+6. A chat title is generated automatically when a new conversation starts.
 
 ## Notes
 
-- The backend uses CORS configured for `http://localhost:5173`.
-- Socket.IO is initialized in the server for real-time chat support.
-- AI models are connected through LangChain wrappers and environment-provided API keys.
-- Gmail OAuth credentials are required for the email verification feature.
+- CORS is configured for `http://localhost:5173`.
+- Socket.IO is initialized in the server for future real-time messaging features.
+- The app is structured as a monorepo-like workspace with separate frontend and backend folders.
+- The project currently does not include a license file.
 
 ## Useful Commands
 
 ```bash
-# backend
-cd Perplexity/sever
+# Backend
+cd Perplexity/server
 npm run dev
 
-# frontend
+# Frontend
 cd Perplexity/client
 npm run dev
 npm run build
@@ -182,4 +209,4 @@ npm run build
 
 ## License
 
-This project is currently unlicensed unless you add a license file or update the package metadata.
+This project is currently unlicensed. Add a license file if you plan to distribute or publish it publicly.
