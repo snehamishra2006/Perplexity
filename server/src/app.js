@@ -43,6 +43,7 @@
 
 
 
+
 import express from "express";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.routes.js";
@@ -73,22 +74,27 @@ app.use(morgan("dev"));
 
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: [
+            "http://localhost:5173",
+            "https://seekora.onrender.com"
+        ],
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE"],
     })
 );
 
-// Health check
+// Serve React frontend
 app.get("/", (req, res) => {
-    res.json({ message: "Server is running" });
+    res.sendFile(
+        path.join(__dirname, "..", "public", "index.html")
+    );
 });
 
 // API routes
 app.use("/api/auth", authRouter);
 app.use("/api/chats", chatRouter);
 
-// Wildcard route for React frontend
+// React frontend fallback
 app.use((req, res) => {
     res.sendFile(
         path.join(__dirname, "..", "public", "index.html")
