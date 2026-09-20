@@ -1,4 +1,4 @@
-# Perplexity
+# Seekora
 
 A full-stack AI research and chat application inspired by Perplexity, built with a React frontend and an Express + MongoDB backend. Users can sign up, verify their email, chat with an AI assistant, and ask questions that can use live web search and email-sending capabilities.
 
