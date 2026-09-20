@@ -90,23 +90,6 @@ Before you begin, make sure you have:
   - Tavily
 - Gmail OAuth credentials for email sending
 
-## Environment Variables
-
-Create a `.env` file inside the `server` folder with values like:
-
-```env
-PORT=8000
-MONGO_URI=mongodb://127.0.0.1:27017/perplexity
-JWT_SECRET=your_super_secret_key
-GEMINI_API_KEY=your_gemini_api_key
-MISTRAL_API_KEY=your_mistral_api_key
-TAVILY_API_KEY=your_tavily_api_key
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REFRESH_TOKEN=your_google_refresh_token
-GOOGLE_USER=your_email@gmail.com
-```
-
 > The email verification flow relies on Gmail OAuth credentials, so it can send account verification messages successfully.
 
 ## Installation
